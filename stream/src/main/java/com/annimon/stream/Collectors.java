@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Common implementations of {@code Collector} interface.
@@ -173,7 +175,27 @@ public final class Collectors {
                 }
         );
     }
-    
+
+    /**
+     * Returns a {@code Collector} that fills new {@code Map} with input elements.
+     *
+     * @param <T> the type of the input elements
+     * @param <K> the result type of key mapping function
+     * @param <V> the result type of value mapping function
+     * @param keyMapper  a mapping function to produce keys
+     * @param valueMapper  a mapping function to produce values
+     * @return a {@code Collector}
+     */
+    public static <T, K, V> Collector<T, ?, ConcurrentMap<K, V>> toConcurrentMap(
+            final Function<? super T, ? extends K> keyMapper,
+            final Function<? super T, ? extends V> valueMapper) {
+        return toMap(keyMapper, valueMapper, new Supplier<ConcurrentMap<K, V>>() {
+            @Override
+            public ConcurrentMap<K, V> get() {
+                return new ConcurrentHashMap<K, V>();
+            }
+        });
+    }
     /**
      * Returns a {@code Collector} that concatenates input elements into new string.
      * 
@@ -826,6 +848,16 @@ public final class Collectors {
         );
     }
 
+    /**
+     * Returns custom collector, based on provided supplier, accumulator and finisher
+     * @param supplier Accumulating class supplier
+     * @param accumulator Accumulator, used for adding new items
+     * @param finisher Finisher, used to translate the accumulating class to target
+     * @param <T> The type of the elements
+     * @param <A> The type of the accumulating class
+     * @param <R> The type of the result
+     * @return a {@code Collector}
+     */
     public static<T, A, R> Collector<T, A, R> of(Supplier<A> supplier,
                                               BiConsumer<A, T> accumulator,
                                               Function<A, R> finisher) {
@@ -835,6 +867,14 @@ public final class Collectors {
         return new CollectorsImpl<T, A, R>(supplier, accumulator, finisher);
     }
 
+    /**
+     * Returns custom collector, based on provided supplier and accumulator
+     * @param supplier Accumulating class supplier
+     * @param accumulator Accumulator, used for adding new items
+     * @param <T> The type of the elements
+     * @param <R> The type of the result
+     * @return a {@code Collector}
+     */
     public static<T, R> Collector<T, R, R> of(Supplier<R> supplier, BiConsumer<R, T> accumulator) {
         Objects.requireNonNull(supplier);
         Objects.requireNonNull(accumulator);
