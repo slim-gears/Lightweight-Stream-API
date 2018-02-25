@@ -826,6 +826,21 @@ public final class Collectors {
         );
     }
 
+    public static<T, A, R> Collector<T, A, R> of(Supplier<A> supplier,
+                                              BiConsumer<A, T> accumulator,
+                                              Function<A, R> finisher) {
+        Objects.requireNonNull(supplier);
+        Objects.requireNonNull(accumulator);
+        Objects.requireNonNull(finisher);
+        return new CollectorsImpl<T, A, R>(supplier, accumulator, finisher);
+    }
+
+    public static<T, R> Collector<T, R, R> of(Supplier<R> supplier, BiConsumer<R, T> accumulator) {
+        Objects.requireNonNull(supplier);
+        Objects.requireNonNull(accumulator);
+        return new CollectorsImpl<T, R, R>(supplier, accumulator);
+    }
+
     private static <K, V>  Supplier<Map<K, V>> hashMapSupplier() {
         return new Supplier<Map<K, V>>() {
 
@@ -894,6 +909,5 @@ public final class Collectors {
         public Function<A, R> finisher() {
             return finisher;
         }
-        
     }
 }
